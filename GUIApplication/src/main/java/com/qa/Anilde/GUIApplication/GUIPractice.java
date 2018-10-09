@@ -26,27 +26,55 @@ public class GUIPractice implements ActionListener
 		Button profile = new Button("Profile");
 		Button log = new Button("Log In");
 		Button contact = new Button("Contact");
+		//===============================================
+		Button saveEmail = new Button("Save Email");
+		Button save = new Button("Save");
+		Button test3 = new Button("test3");
+		
+		
 		Panel panel = new Panel();
-		Panel header = new Panel();
-		header.setSize(200,200);
-
 		TextField text = new TextField(30);
 		Label label = new Label("Description:");
-	
-		f.setLayout(new FlowLayout());
-		//f.setLayout(new BorderLayout());
-		f.setSize(400, 400);
-		f.setBackground(Color.BLUE);
+
 		profile.addActionListener(new GUIPractice(text));
 		contact.addActionListener(new GUIPractice(text));
 		log.addActionListener(new GUIPractice(text));
-		header.add(profile);
-		header.add(contact);
-		header.add(log);
+		saveEmail.addActionListener(new GUIPractice(text));
+		//panel.setLayout(mgr);
+		panel.setBackground(Color.GRAY);
 		panel.add(label);
 		panel.add(text);
+		
+		Panel header = new Panel();
+		header.setBackground(Color.BLACK);
+		//header.setSize(300,300);
+		//header.setLayout(new FlowLayout());
+		//header.add(profile,BorderLayout.WEST );
+		header.add(contact);
+		header.add(log);
+		header.add(saveEmail);
+		header.add(save);
+		header.add(test3);
+		
+		Panel register = new Panel();
+		TextField email = new TextField(30);
+		Label emailLabel = new Label("Email:");
+		register.add(email);
+		register.add(emailLabel);
+	
+		//f.setLayout(new FlowLayout());
+		//f.setLayout(new BorderLayout());
+		f.setSize(400, 400);
+		f.setBackground(Color.BLUE);
+		
+	
+		
+		
+		
+		
 		f.add(header, BorderLayout.NORTH);
-		f.add(panel, BorderLayout.SOUTH);
+		f.add(panel, BorderLayout.WEST);
+		f.add(register, BorderLayout.EAST);
 		f.setVisible(true);
 	}
 	public GUIPractice(TextField text)
@@ -70,7 +98,11 @@ public class GUIPractice implements ActionListener
 		}
 		return null;
 	}
-	
+	public void textEntered()
+	{
+		System.out.println("Email stored: "+inputField.getText());
+		inputField.setText("");
+	}
 	public void actionPerformed(ActionEvent arg) 
 	{
 		Button used = (Button) arg.getSource();
@@ -79,6 +111,8 @@ public class GUIPractice implements ActionListener
 			inputField.setText("This is my Profile");
 		else if(used.getLabel().toLowerCase().equals("contact"))
 			inputField.setText("Contact me on 966879626");
+		else if(used.getLabel().toLowerCase().equals("save email"))
+			textEntered();
 		else
 			inputField.setText("You are now logged in");
 		System.out.println("\n"+used.getLabel()+" button clicked");

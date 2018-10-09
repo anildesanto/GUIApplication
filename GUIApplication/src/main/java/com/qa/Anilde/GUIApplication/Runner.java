@@ -18,9 +18,11 @@ public class Runner {
 //		System.out.println(qa1.calculate());
 		
 		
-		GUIPractice g = new GUIPractice();
-		g.createOther();
-		
+//		GUIPractice g = new GUIPractice();
+//		g.createOther();
+
+		CalculatorWindow calculator = new CalculatorWindow(); 
+		calculator.upgradedCalculator();
 	}
 
 }
