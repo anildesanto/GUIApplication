@@ -10,24 +10,14 @@ public class JDBC
 {
 	public static void main (String args[]) 
 	{
-		Connection conn;
-		Statement stmt;
 		try
 		{
-			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/bank","root","password");
-			stmt = conn.createStatement();
-			
-			BankWindows regWindow = new BankWindows(stmt);
+			BankWindows regWindow = new BankWindows();
 			regWindow.mainWindow();
-			
-			//conn.close();
 		}
 		catch(Exception e)
 		{
 			System.out.println(e.getMessage());
 		}
-		
-		
 	}
 }
