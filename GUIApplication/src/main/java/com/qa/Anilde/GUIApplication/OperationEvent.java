@@ -60,7 +60,6 @@ public class OperationEvent implements ActionListener
 		else
 			multiplication(firstNum,secondNum);
 	}
-	@Override
 	public void actionPerformed(ActionEvent arg) 
 	{
 		used = (Button) arg.getSource();

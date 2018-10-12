@@ -13,82 +13,77 @@ import javax.swing.JOptionPane;
 
 public class BankingEventHandler implements ActionListener
 {
-	Button used;
-	TextField name, address, accno;
-	TextField amount, balance;
-	Button deposit;
-	boolean isDeposit;
+		Button used;
+		TextField name, address, accno;
+		TextField amount, balance;
+		AccountManager accManager = AccountManager.getGetAccountManager();
 
-	public BankingEventHandler(TextField accno,TextField name,TextField address)
-	{
-		this.name = name;
-		this.address = address;
-		this.accno = accno;
-	}
-	public BankingEventHandler(TextField accno)
-	{
-		this.accno = accno;
-	}
-	public BankingEventHandler(TextField accno, TextField name,TextField address,TextField balance,TextField amount)
-	{
-		this.name = name;
-		this.amount = amount;
-		this.balance = balance;
-		this.accno = accno;
-		this.address = address;
-	}
-	public BankingEventHandler(TextField accno,TextField amount,TextField balance, boolean isDeposit)
-	{
-		this.amount = amount;
-		this.balance = balance;
-		this.accno = accno;
-		this.isDeposit = isDeposit;
-	}
-	public void actionPerformed(ActionEvent arg) 
-	{
-		Button used  = (Button)arg.getSource();
-		String btnName = used.getLabel().toLowerCase();
-		try 
+		public BankingEventHandler(TextField accno, TextField name, TextField address)
 		{
-			AccountManager accManager = new AccountManager();
-			if(btnName.equals("create"))
-			{
-				int accNumber = accManager.createAccount(name.getText(), address.getText());
-				accno.setText(Integer.toString(accNumber));
-			}
-			else if(btnName.equals("search"))
-			{
-				int nr = Integer.parseInt(accno.getText().trim());
-				if(accManager.lookFor(nr))
+				this.name = name;
+				this.address = address;
+				this.accno = accno;
+		}
+
+		public BankingEventHandler(TextField accno, TextField name, TextField address, TextField balance, TextField amount)
+		{
+				this.name = name;
+				this.amount = amount;
+				this.balance = balance;
+				this.accno = accno;
+				this.address = address;
+		}
+
+		public void actionPerformed(ActionEvent arg)
+		{
+				
+				Button used = (Button) arg.getSource();
+				String btnName = used.getLabel().toLowerCase();
+				String message = "I don't know";
+				try
 				{
-					name.setText(accManager.getName());
-					balance.setEditable(true);
-					balance.setText("£"+accManager.getBalance());
-					balance.setEditable(false);
-					amount.setEditable(true);
-					amount.setBackground(Color.WHITE);
-					address.setText(accManager.getAddress());
+						if (btnName.equals("create"))
+						{
+								int accNumber = accManager.createAccount(name.getText(), address.getText());
+								accno.setText(Integer.toString(accNumber));
+								used.setEnabled(false);
+						}
+						else if (btnName.equals("search"))
+						{
+								int nr = Integer.parseInt(accno.getText().trim());
+								boolean found = accManager.lookFor(nr);
+								name.setText(accManager.getName());
+								balance.setText(found ? accManager.getBalance() : "");
+								amount.setBackground(Color.WHITE);
+								address.setText(accManager.getAddress());
+								if (!found)
+								{
+										JOptionPane.showMessageDialog(used.getParent(), "Invalid Account Number");
+								}
+						}
+						else if (btnName.equals("deposit") || btnName.equals("withdrawal"))
+						{
+								transaction((btnName.equals("deposit") ? true : false), used);
+						}
 				}
+				catch (Exception e)
+				{
+						JOptionPane.showMessageDialog(used.getParent(), e.getMessage());
+						e.printStackTrace();
+				}
+				System.out.println("\n" + used.getLabel() + " button clicked");
+		}
+
+		public void transaction(boolean isDeposit, Button used) throws SQLException
+		{
+				int nr = Integer.parseInt(accno.getText().trim());
+				float a = Float.parseFloat(amount.getText().trim());
+
+				String message = accManager.tansaction(nr, a, isDeposit, used);
+				if (message.equals("invalid"))
+						JOptionPane.showMessageDialog(used.getParent(), "Cannot withdrawal more than " + "£" + balance.getText());
 				else
-				{
-					amount.setEditable(true);
-					amount.setBackground(Color.CYAN);
-				}
-			}
-			else if(btnName.equals("deposit") || btnName.equals("withdrawal"))
-			{
-				int nr = Integer.parseInt(accno.getText().trim());
-				int a = Integer.parseInt(amount.getText().trim());
-				balance.setText(accManager.tansaction(nr,a, isDeposit));
+						balance.setText(message);
 				amount.setText("");
-				used.setEnabled(false);
-			}
 		}
-		catch (Exception e) 
-		{
-			JOptionPane.showMessageDialog(used.getParent(), e.getMessage());
-			e.printStackTrace();
-		}
-		System.out.println("\n"+used.getLabel()+" button clicked");
-	}
 }

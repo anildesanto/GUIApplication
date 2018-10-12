@@ -3,8 +3,10 @@ package com.qa.BankingApplication.Banking;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-
-public class BankingInputHandler implements KeyListener
+import java.awt.event.TextEvent;
+import java.awt.event.TextListener;
+import java.util.Arrays;
+public class BankingInputHandler implements TextListener
 {
 	TextField toUpdate;
 	Button button;
@@ -34,22 +36,20 @@ public class BankingInputHandler implements KeyListener
 		if(button != null)
 			updateButton = true;
 	}
-	public void keyPressed(KeyEvent e) 
-	{
-		// TODO Auto-generated method stub
-		
-	}
 
 	public void updateField()
 	{
 		if(!used.getText().equals(""))
 		{
+			toUpdate.setText("");
 			toUpdate.setEditable(true);
 			toUpdate.setBackground(Color.WHITE);
 		}
 		else
 		{
 			toUpdate.setText("");
+			KeyListener[] list = toUpdate.getKeyListeners();
+			Arrays.stream(list).forEach(action -> action.keyReleased(null));
 			toUpdate.setBackground(Color.CYAN);
 			toUpdate.setEditable(false);
 		}
@@ -74,11 +74,14 @@ public class BankingInputHandler implements KeyListener
 			updateButton();
 		
 	}
-
-	public void keyTyped(KeyEvent e) 
+	@Override
+	public void textValueChanged(TextEvent e) 
 	{
-		// TODO Auto-generated method stub
-		
+		used = (TextField) e.getSource();
+		if(updateField)
+			updateField();
+		if(updateButton)
+			updateButton();
 	}
 
 }

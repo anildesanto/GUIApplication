@@ -12,11 +12,9 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import com.qa.BankingApplication.Banking.AccountManager;
 
 public class WindowHelper 
 {
-	private static AccountManager accManager;
 	public static void addToContainer(Component[] cList, Container cc)
 	{
 		Arrays.stream(cList).forEach((component) -> cc.add(component));
@@ -26,30 +24,15 @@ public class WindowHelper
 		titleLabel.setFont(new Font ("TimesRoman", Font.BOLD, 15));
 		titleLabel.setText(titleLabel.getText().toUpperCase());
 	}
-	public static void addCloseOption(Frame f, boolean isMain)
+	public static void addCloseOption(Frame f)
 	{
 		 f.addWindowListener(new WindowAdapter()
 		{
 			 public void windowClosing(WindowEvent e) 
 			 {
 	               // Dispose the window after the close button is clicked.
-				 accManager = AccountManager.getGetAccountManager();
-				 try 
-				 {
-					 if(isMain)
-						 accManager.close();
-					 else
-						 f.setTitle("closed");
-				 } 
-				 catch(Exception ex)
-				 {
-					 ex.printStackTrace();
-				 }
-				 finally
-				 {
 					 e.getWindow().dispose();
 					 //System.exit(0);
-				 }
 				
 			 }
 		});

@@ -1,137 +1,165 @@
 package com.qa.BankingApplication.Banking;
 
+import java.awt.Button;
+import java.awt.Component;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
 
 import javax.swing.JOptionPane;
 
-public class AccountManager 
+public class AccountManager
 {
-	private Connection conn;
-	private Statement stmt;
-	public AccountManager() throws SQLException 
-	{
-		try 
+		private Connection conn;
+		private Statement stmt;
+		DecimalFormat df = new DecimalFormat("###,###,###.##");
+		private static AccountManager accManager;
+		static
 		{
-			Class.forName("com.mysql.jdbc.Driver");
+				try
+				{
+						accManager = new AccountManager();
+				}
+				catch (SQLException | ClassNotFoundException e)
+				{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+				}
 		}
-		catch (ClassNotFoundException e) 
-		{
-			JOptionPane.showMessageDialog(null, e.getMessage());
-			System.out.println(e.getMessage());
-		}
-		conn = DriverManager.getConnection("jdbc:mysql://localhost/bank","root","password");
-		stmt = conn.createStatement();
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) 
-	{
-		this.name = name;
-	}
-	public String getAddress() 
-	{
-		return address;
-	}
-	public void setAddress(String address) 
-	{
-		this.address = address;
-	}
-	public int getBalance() 
-	{
-		return balance;
-	}
-	public void setBalance(int balance) 
-	{
-		this.balance = balance;
-	}
 
-	private int accno = 0;
-	private String name = "";
-	private String address = "";
-	private int balance = 0;
-	public int createAccount(String name, String address) throws SQLException 
-	{
-		ResultSet rs = stmt.executeQuery("Select * from accounts");
-		int number = 0;
-		while (rs.next())
+		public static AccountManager getGetAccountManager()
 		{
-			number++;
-	    }
-		number++;
-		stmt.executeUpdate("insert into accounts values("+number+",'"+name+"','"+address+"')");
-		
-		return number;
-	}
-	public int retrieveBalance(int accno) throws SQLException
-	{
-		ResultSet checkDeposits = stmt.executeQuery("Select * from deposits where accno = "+accno+"");
-		int depositsAmount = 0;
-		int withdrawalsAmount = 0;
-		while (checkDeposits.next())
-		{
-			depositsAmount += checkDeposits.getInt(2);
+				return accManager;
 		}
-		checkDeposits.close();
-		
-		ResultSet checkWithdrawls = stmt.executeQuery("Select * from withdrawals where accno = "+accno+"");
-		while (checkWithdrawls.next())
+
+		private AccountManager() throws SQLException, ClassNotFoundException
 		{
-			withdrawalsAmount += checkWithdrawls.getInt(2);
+				Class.forName("com.mysql.jdbc.Driver");
+				conn = DriverManager.getConnection("jdbc:mysql://localhost/bank", "root", "password");
+				stmt = conn.createStatement();
 		}
-		checkWithdrawls.close();
-		return (depositsAmount-withdrawalsAmount);
-	}
-	public void close() throws SQLException
-	{
-		stmt.close();
-		conn.close();
-	}
-	
-	public boolean lookFor(int nr) throws SQLException
-	{
-		ResultSet rs = stmt.executeQuery("Select * from accounts");
-		while (rs.next())
+
+		public String getName()
 		{
-			System.out.println(rs.getInt(1));
-			if(rs.getInt(1) == nr)
-			{
-				accno = rs.getInt(1);
-				name = rs.getString(2);
-				address = rs.getString(3);
-				AccountManager accManager = new AccountManager();
-				balance = accManager.retrieveBalance(nr);
-				System.out.println(accno+name+address+balance);
-				break;
-			}
-	    }
-		rs.close();
-		if(accno > 0)
-		{
-			return true;
+				return name;
 		}
-		else
+
+		public String getAddress()
 		{
-			return false;
+				return address;
 		}
-	}
-	public String tansaction(int accno, int amount, boolean deposit) throws SQLException
-	{
-		if(deposit)
-			stmt.executeUpdate("insert into deposits values("+accno+",'"+amount+"','2008-11-11')");
-		else
+
+		public String getBalance() throws SQLException
 		{
-			if(amount <= retrieveBalance(accno))
-				stmt.executeUpdate("insert into withdrawals values("+accno+",'"+amount+"','2008-11-11')");
-			else
-			{
-				return "Cannot withrawal more than Balance";
-			}
+				return "£" + df.format(retrieveBalance(accno));
 		}
-		return "£"+retrieveBalance(accno);
-	}
+
+		private int accno = 0;
+		private String name = "";
+		private String address = "";
+		private float balance = 0;
+
+		public int createAccount(String name, String address) throws SQLException
+		{
+
+				int number = 1;
+				ResultSet closedAccountsCheck = stmt.executeQuery("Select * from closedAccounts");
+				if(closedAccountsCheck.next())
+				{
+						number = closedAccountsCheck.getInt(1);
+						stmt.executeUpdate("delete from closedaccounts where accno =" + number);
+				}
+				else
+				{
+    				// select max from accno
+    				ResultSet rs = stmt.executeQuery("Select max(accno) from accounts");
+    				if (rs.next())
+    						number += rs.getInt(1);
+    				rs.close();
+				}
+				stmt.executeUpdate("insert into accounts values(" + number + ",'" + name + "','" + address + "')");
+				return number;
+		}
+
+		public boolean deleteAccount(int nr) throws SQLException
+		{
+				// select max from accno
+				ResultSet rs = stmt.executeQuery("Select * from accounts where accno = " + nr);
+				if (rs.next())
+				{
+						stmt.executeUpdate("delete from withdrawals where accno =" + nr);
+						stmt.executeUpdate("delete from deposits where accno =" + nr);
+						stmt.executeUpdate("delete from accounts where accno =" + nr);
+						stmt.executeUpdate("insert into closedaccounts values(" + nr+")");
+						rs.close();
+						return true;
+				}
+				else
+				{
+						rs.close();
+						return false;
+				}
+		}
+
+		public float retrieveBalance(int accno) throws SQLException
+		{
+				ResultSet checkDeposits = stmt.executeQuery("Select sum(amount) from deposits where accno = " + accno + "");
+				float money = 0.0f;
+				// select sum amounts
+				if (checkDeposits.next())
+						money = checkDeposits.getFloat(1);
+				checkDeposits.close();
+				// select sum amount
+				ResultSet checkWithdrawls = stmt
+								.executeQuery("Select sum(amount) from withdrawals where accno = " + accno + "");
+				if (checkWithdrawls.next())
+						money -= checkWithdrawls.getFloat(1);
+				checkWithdrawls.close();
+				return (money);
+		}
+
+		public void close() throws SQLException
+		{
+				stmt.close();
+				conn.close();
+		}
+
+		public boolean lookFor(int nr) throws SQLException
+		{
+				ResultSet rs = stmt.executeQuery("Select * from accounts where accno =" + nr);
+				if (rs.next())
+				{
+						accno = rs.getInt(1);
+						name = rs.getString(2);
+						address = rs.getString(3);
+						balance = retrieveBalance(nr);
+						rs.close();
+						return true;
+				}
+				else
+				{
+						accno = 0;
+						name = "";
+						address = "";
+						balance = 0;
+						rs.close();
+						return false;
+				}
+		}
+		public String tansaction(int accno, float amount, boolean deposit, Button used) throws SQLException
+		{
+				if (deposit)
+						stmt.executeUpdate("insert into deposits values(" + accno + ",'" + amount + "',CURDATE())");
+				else
+				{
+						if (amount <= retrieveBalance(accno))
+								stmt.executeUpdate("insert into withdrawals values(" + accno + ",'" + amount + "',CURDATE())");
+						else
+								return "invalid";
+				}
+				return "£" + df.format(retrieveBalance(accno));
+		}
 }

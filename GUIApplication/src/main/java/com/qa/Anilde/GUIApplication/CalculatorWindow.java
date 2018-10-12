@@ -5,8 +5,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JOptionPane;
+
+import Utilities.WindowHelper;
 public class CalculatorWindow 
 {
+	Label steps = new Label();
 	public void createWindow()
 	{
 		Frame f =  new Frame("Calculator");
@@ -54,7 +57,31 @@ public class CalculatorWindow
 	public void upgradedCalculator()
 	{
 		Frame f =  new Frame("Calculator");
+		WindowHelper.addCloseOption(f);
 		//f.setLayout(new FlowLayout());
+		Panel title = new Panel();
+		Button titleLabel =  new Button("Steps");
+		titleLabel.addActionListener(new ActionListener() 
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				resultsSteps();
+				
+			}
+			
+		});
+		//WindowHelper.setFontDetails(titleLabel);
+		//title.setLayout(new GridLayout(2,1));
+		TextField inputField =  new TextField(30);
+		Panel inputPanel = new Panel();
+		Panel gridPanel = new Panel();
+		
+		title.add(inputPanel);
+		title.add(titleLabel);
+		title.setBackground(Color.CYAN);
+		
 		sumBtn = new Button("+");
 		minusBtn = new Button("-");
 		timesBtn = new Button("*");
@@ -62,27 +89,57 @@ public class CalculatorWindow
 		f.setBackground(Color.GRAY);
 		f.setVisible(true);
 	
-		TextField inputField =  new TextField(30);
-		Panel inputPanel = new Panel();
-		Panel gridPanel = new Panel();
+		
 		inputPanel.add(inputField);
-		gridPanel.setLayout(new GridLayout(4,4));
+		gridPanel.setLayout(new GridLayout(5,4));
 		
+		addButtons(13,gridPanel);
+		setButtons(gridPanel,   inputField, steps);
 		
-		addButtons(12,gridPanel);
-		setButtons(gridPanel,   inputField);
-		f.add(inputPanel, BorderLayout.NORTH);
+		f.add(title,BorderLayout.NORTH);
+		//f.add(inputPanel, BorderLayout.NORTH);
 		f.add(gridPanel, BorderLayout.CENTER);
+		
 		f.setSize(400, 400);
 	}
-	public void setButtons(Panel gridPanel, final TextField field)
+	public Label resultsSteps()
+	{
+		Frame f =  new Frame("Steps");
+		WindowHelper.addCloseOption(f);
+		//f.setLayout(new FlowLayout());
+		Panel title = new Panel();
+		Button titleLabel =  new Button("Steps");
+		//title.setLayout(new GridLayout(2,1));
+		title.add(titleLabel);
+		title.setBackground(Color.CYAN);
+		
+		f.setBackground(Color.GRAY);
+		f.setVisible(true);
+		
+		Panel inputPanel = new Panel();
+		Panel gridPanel = new Panel();
+		gridPanel.setLayout(new GridLayout(5,4));
+		gridPanel.add(steps);
+		title.add(inputPanel);
+		f.add(title,BorderLayout.NORTH);
+		//f.add(inputPanel, BorderLayout.NORTH);
+		f.add(gridPanel, BorderLayout.CENTER);
+		
+		f.setSize(200, 200);
+		return steps;
+	}
+	public void addToPanel(String step)
+	{
+		TextField t = new TextField(10);
+	}
+	public void setButtons(Panel gridPanel, final TextField field, Label steps)
 	{
 		for (Component c : gridPanel.getComponents()) 
 		{
 			final Button btn = (Button)c;
 			if(btn.getLabel().toLowerCase().equals( "=") || btn.getLabel().toLowerCase().equals( "c"))
 			{
-				btn.addActionListener(new UpgradedCalculator(field));
+				btn.addActionListener(new UpgradedCalculator(field, steps));
 			}
 			else
 			{
@@ -106,7 +163,7 @@ public class CalculatorWindow
 		for (int i = 0,a = 0; i <= number; i++) 
 		{
 			
-			if(i != 3 && i != 6 && i != 9 && i != 12)
+			if(i != 3 && i != 6 && i != 9 && i != 13)
 			{
 				Button btn = null;
 				if(i == 10)
@@ -116,6 +173,14 @@ public class CalculatorWindow
 				else if(i == 11)
 				{
 					btn = new Button("C");
+				}
+				else if(i == 12)
+				{
+					btn = new Button("(");
+				}
+				else if(i == 13)
+				{
+					btn = new Button(")");
 				}
 				else
 				{

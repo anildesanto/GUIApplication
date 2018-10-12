@@ -14,17 +14,22 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
 
 import Utilities.WindowHelper;
-
+import javax.swing.event.DocumentListener.*;
 public class BankWindows 
 {
 	Panel registeredStudents = new Panel();
+	Frame createUser = new Frame("Create Account");
+	Frame depositsFrame =  new Frame("Deposit");
+	Frame withDrawalFrame =  new Frame();
+	Frame transaction =  new Frame("closed");
 	public void mainWindow() throws HeadlessException, SQLException
 	{
 		Frame f =  new Frame("Register");
-		WindowHelper.addCloseOption(f);
+		WindowHelper.addCloseOption(f,true);
 		Button createAccount = new Button("Create Account");
 		Button depositAccount = new Button("Deposit Account");
 		Button withdrawalAccount = new Button("Withdrawal Account");
@@ -32,6 +37,7 @@ public class BankWindows
 		{
 			public void actionPerformed(ActionEvent arg) 
 			{
+				if(createUser != null && !createUser.isActive())
 				createAccountWindow();
 			}
 		}
@@ -40,7 +46,11 @@ public class BankWindows
 		{
 			public void actionPerformed(ActionEvent arg) 
 			{
-				transactionAccountWindow("Deposit", true);
+				if(transaction.getTitle().equals("closed"))
+				{
+					transactionAccountWindow("Deposit", true);
+					transaction.setTitle("Deposit");
+				}
 			}
 		}
 		);
@@ -48,7 +58,11 @@ public class BankWindows
 		{
 			public void actionPerformed(ActionEvent arg) 
 			{
-				transactionAccountWindow("Withdrawal", false);
+				if(transaction.getTitle().equals("closed"))
+				{
+					transactionAccountWindow("Withdrawal", false);
+					transaction.setTitle("Withdrawal");
+				}
 			}
 		}
 		);
@@ -57,27 +71,68 @@ public class BankWindows
 		
 		Panel title = new Panel();
 		Label titleLabel =  new Label("BANKING");
+		WindowHelper.setFontDetails(titleLabel);
 		title.add(titleLabel);
 		title.setBackground(Color.yellow);
 		
+		Panel deleteAccount = new Panel();
+		TextField accountNrTxt = new TextField(15);
+		Label textLabel = new Label("Account Numberr");
+		Button deleteButton = new Button("Delete");
+		deleteButton.addActionListener(new ActionListener()
+						{
+								@Override
+								public void actionPerformed(ActionEvent e)
+								{
+										String message = "";
+										Button used = (Button) e.getSource();
+										AccountManager accManager = AccountManager.getGetAccountManager();
+										try
+										{
+												int nr = Integer.parseInt(accountNrTxt.getText());
+												message = "Account Number: "+nr+" was deleted";
+												if(!accManager.deleteAccount(nr))
+												{
+														message =  "Account Number does not exist";
+												}
+										}
+										catch (NumberFormatException | SQLException e1)
+										{
+												message =  "Insert a Valid Number";
+												e1.printStackTrace();
+										}
+										finally 
+										{
+												JOptionPane.showMessageDialog(used.getParent(),message);
+												accountNrTxt.setText("");
+										}
+								}
+				
+						});
+		
+		deleteAccount.add(textLabel);
+		deleteAccount.add(accountNrTxt);
+		deleteAccount.add(deleteButton);
+		
 		Panel mainPanel = new Panel();
-		mainPanel.setLayout(new GridLayout(3,2));
+		mainPanel.setLayout(new GridLayout(4,2));
 		Component[] mainPanelComponentsList = {createAccount,depositAccount,withdrawalAccount};
 		WindowHelper.addToContainer(mainPanelComponentsList, mainPanel);
-		f.add(mainPanel,BorderLayout.CENTER);
-		
 		f.add(title,BorderLayout.NORTH);
+		f.add(mainPanel,BorderLayout.CENTER);
+		f.add(deleteAccount,BorderLayout.SOUTH);
+		
 		f.setSize(500, 300);
 	}
 	public void createAccountWindow()
 	{
-		Frame createUser =  new Frame("Create Account");
-		WindowHelper.addCloseOption(createUser);
+		WindowHelper.addCloseOption(createUser, false);
 		createUser.setBackground(Color.GRAY);
 		createUser.setVisible(true);
 		
 		Panel title = new Panel();
 		Label titleLabel =  new Label("Create Account");
+		WindowHelper.setFontDetails(titleLabel);
 		title.add(titleLabel);
 		title.setBackground(Color.yellow);
 		
@@ -103,22 +158,25 @@ public class BankWindows
 		Button saveAccount = new Button("Create");
 		saveAccount.setEnabled(false);
 		saveAccount.addActionListener(new BankingEventHandler (accountTxt,nameTxt,addressTxt));
-		nameTxt.addKeyListener(new BankingInputHandler(addressTxt));
-		addressTxt.addKeyListener(new BankingInputHandler(saveAccount));
+		nameTxt.addTextListener((new BankingInputHandler(addressTxt)));
+		addressTxt.addTextListener(new BankingInputHandler(saveAccount));
 		createUser.add(saveAccount,BorderLayout.SOUTH);
 		createUser.setSize(300, 180);
 	}
 	
 	public void transactionAccountWindow(String operationType, boolean isDeposit)
 	{
-		Frame transaction =  new Frame(operationType + " Cash");
-		WindowHelper.addCloseOption(transaction);
+		transaction =  new Frame(operationType + " Cash");
+		
+		WindowHelper.addCloseOption(transaction, false);
 		transaction.setBackground(Color.GRAY);
 		transaction.setVisible(true);
 		
 		Panel title = new Panel();
 		Label titleLabel =  new Label(operationType);
+		WindowHelper.setFontDetails(titleLabel);
 		title.add(titleLabel);
+		
 		title.setBackground(Color.yellow);
 		
 		Panel create = new Panel();
@@ -144,17 +202,20 @@ public class BankWindows
 		balanceTxt.setEditable(false);
 		depositAmountTxt.setEditable(false);
 		
+
+
+		BankingEventHandler buttonEvents = new BankingEventHandler(accountTxt,nameTxt,addressTxt,balanceTxt,depositAmountTxt);
+		
 		Panel searchPanel = new Panel();
 		searchPanel.add(accountTxt);
 		Button lookForAccount = new Button("Search");
 
 		Button depositMoney = new Button(operationType);
-		lookForAccount.addActionListener(new BankingEventHandler(accountTxt,nameTxt,addressTxt,balanceTxt,depositAmountTxt));
-		depositMoney.addActionListener(new BankingEventHandler(accountTxt,depositAmountTxt,balanceTxt,isDeposit));
+		nameTxt.addTextListener((new BankingInputHandler(depositAmountTxt)));
+		lookForAccount.addActionListener(buttonEvents);
+		depositMoney.addActionListener(buttonEvents);
 		searchPanel.add(lookForAccount);
-
-		
-		depositAmountTxt.addKeyListener(new BankingInputHandler(depositMoney));
+		depositAmountTxt.addTextListener(new BankingInputHandler(depositMoney));
 		Component[] createComponentsList = {accountNr,searchPanel,name,nameTxt,address,addressTxt,balance,balanceTxt,depositAmount,depositAmountTxt};
 		WindowHelper.addToContainer(createComponentsList, create);
 		transaction.add(title,BorderLayout.NORTH);
